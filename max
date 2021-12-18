@@ -1,0 +1,61 @@
+.data
+v: .long 3, 15, 27, 11, 42, 8, 35
+n: .long 7
+formatPrintf: .asciz "Elementul maxim din array este %d\n"
+.text
+
+.global main
+// %ebx, %esi, %edi, %ebp, %esp
+maxim:
+// %esp:(<adr de in>)(*v)(n)
+pushl %ebp
+movl %esp, %ebp
+// %esp:%ebp:(%ebp v)(<adr de in>)(*v)(n)
+pushl %edi
+// %esp:(%edi v)%ebp:(%ebp v)(<adr de in>)(*v)(n)
+movl 8(%ebp), %edi # adresa array-ului
+movl 12(%ebp), %edx # dimensiunea array-ului
+
+ xorl %ecx, %ecx # pe post de "i"
+movl (%edi, %ecx, 4), %eax # eax = v[0]
+incl %ecx
+pushl %ebx
+// %esp:(%ebx v)(%edi v)%ebp:(%ebp v)(<adr de in>)(*v)(n)
+maxim_for:
+// for (ecx = 1; ecx < edx; ecx++) { if (v[i] > eax) { eax = v[i] } }
+cmp %edx, %ecx
+je maxim_exit
+movl (%edi, %ecx, 4), %ebx
+cmp %eax, %ebx
+jg change_max
+maxim_cont:
+incl %ecx
+jmp maxim_for
+
+change_max:
+movl %ebx, %eax
+jmp maxim_cont
+
+maxim_exit:
+popl %ebx
+popl %edi
+popl %ebp
+ret
+
+main:
+pushl n
+pushl $v
+call maxim
+popl %ebx
+popl %ebx
+// printf("Elementul maxim ...", eax)
+pushl %eax
+pushl $formatPrintf
+call printf
+popl %ebx
+popl %ebx
+
+et_exit:
+movl $1, %eax
+xorl %ebx, %ebx
+int $0x80
